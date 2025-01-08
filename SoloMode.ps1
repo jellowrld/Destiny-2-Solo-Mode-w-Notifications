@@ -19,9 +19,31 @@ function Send-Notification {
     New-BurntToastNotification -Text $Title, $Message
 }
 
+# Function to enable Windows Firewall
+function Ensure-FirewallEnabled {
+    $firewallProfiles = Get-NetFirewallProfile -All
+    if ($firewallProfiles.Enabled -contains $false) {
+        Write-Host "Windows Firewall is disabled. Enabling it now..."
+        Set-NetFirewallProfile -All -Enabled True
+        Send-Notification -Title "Firewall Status" -Message "Windows Firewall has been enabled."
+        Write-Host "Windows Firewall enabled."
+    } else {
+        Write-Host "Windows Firewall is already enabled."
+    }
+}
+
+# Function to disable Windows Firewall
+function Disable-Firewall {
+    Write-Host "Disabling Windows Firewall..."
+    Set-NetFirewallProfile -All -Enabled False
+    Send-Notification -Title "Firewall Status" -Message "Windows Firewall has been disabled."
+    Write-Host "Windows Firewall disabled."
+}
+
 # Function to enable Solo Mode
 function Enable-SoloMode {
     Write-Host "Activating Destiny 2 Solo Mode..."
+    Ensure-FirewallEnabled
     New-NetFirewallRule -DisplayName "Destiny2-Solo-1" -Direction Outbound -RemotePort 27000-27200,3097 -Protocol TCP -Action Block
     New-NetFirewallRule -DisplayName "Destiny2-Solo-2" -Direction Outbound -RemotePort 27000-27200,3097 -Protocol UDP -Action Block
     New-NetFirewallRule -DisplayName "Destiny2-Solo-3" -Direction Inbound -RemotePort 27000-27200,3097 -Protocol TCP -Action Block
@@ -39,6 +61,7 @@ function Disable-SoloMode {
     Remove-NetFirewallRule -DisplayName "Destiny2-Solo-4" -ErrorAction SilentlyContinue
     Write-Host "Solo Mode deactivated."
     Send-Notification -Title "Destiny 2" -Message "Solo Mode has been deactivated."
+    Disable-Firewall
 }
 
 # Monitor the game process
