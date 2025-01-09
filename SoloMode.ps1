@@ -64,6 +64,28 @@ function Disable-SoloMode {
     Disable-Firewall
 }
 
+# Function to monitor key press for backtick (`) and toggle Solo Mode
+function Monitor-KeyPress {
+    $backtickPressed = $false
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        if ($key.Key -eq 'Backtick') {
+            if ($backtickPressed) {
+                Write-Host "Backtick key pressed again. Disabling Solo Mode..."
+                Disable-SoloMode
+            } else {
+                Write-Host "Backtick key pressed. Enabling Solo Mode..."
+                Enable-SoloMode
+            }
+            $backtickPressed = -not $backtickPressed
+        }
+        Start-Sleep -Milliseconds 100
+    }
+}
+
+# Start monitoring key press in a separate thread
+Start-Job -ScriptBlock { Monitor-KeyPress }
+
 # Monitor the game process
 Write-Host "Waiting for Destiny 2 to start..."
 Send-Notification -Title "Destiny 2" -Message "Monitoring for game launch..."
